@@ -1,35 +1,46 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import "./App.css";
+import useSWR from "swr";
+import { fetcher } from "./utils/fetcher";
+import { Todo } from "./models/todo";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { data, isLoading } = useSWR<Todo[]>(
+    "http://localhost:3000/todos",
+    fetcher
+  );
+
+  if (isLoading) return <div>Loading...</div>;
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div>
+      <h1>Todos</h1>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Done</th>
+            <th>Title</th>
+            <th>ExpiresAt</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data?.map((todo) => (
+            <tr key={todo.id}>
+              <td>
+                <input type="checkbox" checked={todo.completed} />
+              </td>
+              <td>{todo.title}</td>
+              <td>
+                {todo.expiresAt
+                  ? new Date(todo.expiresAt).toLocaleDateString()
+                  : ""}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
-export default App
+export default App;
