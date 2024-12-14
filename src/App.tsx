@@ -18,7 +18,10 @@ function App() {
     <div>
       <h1>Todos</h1>
 
-      <TodoTable headers={["Completed", "Title", "Expires At"]} todos={data} />
+      <TodoTable
+        headers={["Completed", "Title", "Expires At", "Updated At"]}
+        todos={data}
+      />
     </div>
   );
 }
