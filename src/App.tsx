@@ -2,6 +2,14 @@ import "./App.css";
 import useSWR from "swr";
 import { fetcher } from "./utils/fetcher";
 import { Todo } from "./models/todo";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./components/common/table/table";
 
 function App() {
   const { data, isLoading } = useSWR<Todo[]>(
@@ -15,30 +23,30 @@ function App() {
     <div>
       <h1>Todos</h1>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Done</th>
-            <th>Title</th>
-            <th>ExpiresAt</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Done</TableHead>
+            <TableHead>Title</TableHead>
+            <TableHead>ExpiresAt</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {data?.map((todo) => (
-            <tr key={todo.id}>
-              <td>
+            <TableRow key={todo.id}>
+              <TableCell>
                 <input type="checkbox" checked={todo.completed} />
-              </td>
-              <td>{todo.title}</td>
-              <td>
+              </TableCell>
+              <TableCell>{todo.title}</TableCell>
+              <TableCell>
                 {todo.expiresAt
                   ? new Date(todo.expiresAt).toLocaleDateString()
                   : ""}
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }
