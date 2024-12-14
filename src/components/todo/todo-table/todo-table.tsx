@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, memo } from "react";
 import { Todo } from "../../../models/todo";
 import {
   TableRow,
@@ -14,7 +14,7 @@ import { useSWRConfig } from "swr";
 type TodoTableHeaderProps = {
   headers: string[];
 };
-export function TodoTableHeader({ headers }: TodoTableHeaderProps) {
+const TodoTableHeaderComponent = ({ headers }: TodoTableHeaderProps) => {
   return (
     <TableHeader>
       <TableRow>
@@ -24,12 +24,13 @@ export function TodoTableHeader({ headers }: TodoTableHeaderProps) {
       </TableRow>
     </TableHeader>
   );
-}
+};
+export const TodoTableHeader = memo(TodoTableHeaderComponent);
 
 type TodoTableRowProps = {
   todo: Todo;
 };
-export function TodoTableRow({ todo }: TodoTableRowProps) {
+const TodoTableRowComponent = ({ todo }: TodoTableRowProps) => {
   const [value, setValue] = useState(todo.title);
   const { mutate } = useSWRConfig();
 
@@ -49,10 +50,12 @@ export function TodoTableRow({ todo }: TodoTableRowProps) {
     });
 
     if (response.ok) {
-      console.log("PUT successful");
+      console.log("PATCH successful");
+      // 部分的な更新であれば、キャッシュを直接書き換えることも可能だが
+      // ここではシンプルに全体をrefetchする
       mutate("http://localhost:3000/todos");
     } else {
-      console.log("PUT failed");
+      console.log("PATCH failed");
     }
   };
 
@@ -75,7 +78,23 @@ export function TodoTableRow({ todo }: TodoTableRowProps) {
       <TableCell>{new Date(todo.updatedAt).toLocaleTimeString()}</TableCell>
     </TableRow>
   );
-}
+};
+
+// todoが変わった時だけレンダリングするようメモ化
+export const TodoTableRow = memo(
+  TodoTableRowComponent,
+  (prevProps, nextProps) => {
+    // 比較関数: 変更がなければtrueを返してレンダリングしない
+    // ここではtodo.idで同一行を識別し、タイトルや日時などの変更有無で比較
+    return (
+      prevProps.todo.id === nextProps.todo.id &&
+      prevProps.todo.title === nextProps.todo.title &&
+      prevProps.todo.completed === nextProps.todo.completed &&
+      prevProps.todo.expiresAt === nextProps.todo.expiresAt &&
+      prevProps.todo.updatedAt === nextProps.todo.updatedAt
+    );
+  }
+);
 
 type TodoTableProps = {
   headers: string[];
