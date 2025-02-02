@@ -5,6 +5,9 @@ export type Todo = {
   expiresAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  isGrouped?: boolean;
+  isParent?: boolean;
+  isLastChild?: boolean;
 };
 export type GroupedTodo = {
   [key: string]: Todo[];

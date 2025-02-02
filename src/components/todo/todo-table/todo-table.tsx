@@ -19,24 +19,16 @@ const TodoTableHeaderComponent = ({ headers }: TodoTableHeaderProps) => {
 export const TodoTableHeader = memo(TodoTableHeaderComponent);
 
 type TodoTableRowProps = {
-  todo: TodoDetail;
+  todo: Todo;
 };
 const TodoTableRow = ({ todo }: TodoTableRowProps) => {
-  const { groupedTodos, todo: t } = todo;
-  if (t) {
-    return <IndependentTodoRow todo={t} />;
-  }
-  if (groupedTodos) {
-    return <GroupedTodoRow todos={groupedTodos} />;
-  }
+  return <IndependentTodoRow todo={todo} />;
 };
 
 type IndependentTodoRowProps = {
   todo: Todo;
-  isParent?: boolean;
-  isGrouped?: boolean;
 };
-const IndependentTodoRow = ({ todo, isGrouped }: IndependentTodoRowProps) => {
+const IndependentTodoRow = ({ todo }: IndependentTodoRowProps) => {
   const [value, setValue] = useState(todo.title);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,38 +40,40 @@ const IndependentTodoRow = ({ todo, isGrouped }: IndependentTodoRowProps) => {
       <TableCell
         style={{
           width: 50,
-          ...(isGrouped && { borderLeft: "3px solid black" }),
+          ...(todo.isGrouped && { borderLeft: "3px solid black" }),
+          ...(todo.isParent && { borderTop: "3px solid black" }),
+          ...(todo.isLastChild && { borderBottom: "3px solid black" }),
         }}
       >
         <input type="checkbox" checked={todo.completed} />
       </TableCell>
-      <TableCell>
+      <TableCell
+        style={{
+          ...(todo.isParent && { borderTop: "3px solid black" }),
+          ...(todo.isLastChild && { borderBottom: "3px solid black" }),
+        }}
+      >
         <Text value={value} onChange={handleChange} />
       </TableCell>
-      <TableCell style={{ width: 150 }}>
+      <TableCell
+        style={{
+          width: 150,
+          ...(todo.isParent && { borderTop: "3px solid black" }),
+          ...(todo.isLastChild && { borderBottom: "3px solid black" }),
+        }}
+      >
         {todo.expiresAt ? new Date(todo.expiresAt).toLocaleDateString() : ""}
       </TableCell>
       <TableCell
         style={{
           width: 150,
-          ...(isGrouped && { borderRight: "3px solid black" }),
+          ...(todo.isGrouped && { borderRight: "3px solid black" }),
+          ...(todo.isParent && { borderTop: "3px solid black" }),
+          ...(todo.isLastChild && { borderBottom: "3px solid black" }),
         }}
       >
         {new Date(todo.updatedAt).toLocaleTimeString()}
       </TableCell>
-    </>
-  );
-};
-
-type GroupedTodoRowProps = {
-  todos: Todo[];
-};
-const GroupedTodoRow = ({ todos }: GroupedTodoRowProps) => {
-  return (
-    <>
-      {todos.map((todo) => (
-        <IndependentTodoRow key={todo.id} todo={todo} isGrouped />
-      ))}
     </>
   );
 };
@@ -89,6 +83,24 @@ type TodoTableProps = {
   todoProject: TodoProject;
 };
 export function TodoTable({ headers, todoProject }: TodoTableProps) {
+  // こんな感じで成形すれば仮想化できる
+  const todos: Todo[] = todoProject.todos.reduce<Todo[]>((acc, detail) => {
+    if (detail.todo) {
+      acc.push(detail.todo);
+    }
+    if (detail.groupedTodos) {
+      detail.groupedTodos.forEach((todo, index) => {
+        acc.push({
+          ...todo,
+          isGrouped: true,
+          isParent: index === 0,
+          isLastChild: index === detail.groupedTodos!.length - 1,
+        });
+      });
+    }
+    return acc;
+  }, [] as Todo[]);
+
   return (
     <TableVirtuoso
       style={{ height: 400, width: 1000 }}
@@ -97,7 +109,7 @@ export function TodoTable({ headers, todoProject }: TodoTableProps) {
       // components={{
       //   TableRow: React.Fragment,
       // }}
-      data={todoProject.todos}
+      data={todos}
       fixedHeaderContent={() => <TodoTableHeader headers={headers} />}
       itemContent={(_, todo) => <TodoTableRow todo={todo} />}
     />
