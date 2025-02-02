@@ -28,8 +28,8 @@ export function TableBody({ children, ...props }: TableBodyProps) {
 type TableRowProps = PropsWithChildren<
   React.HTMLAttributes<HTMLTableRowElement>
 >;
-export function TableRow({ children, ...props }: TableRowProps) {
-  return <tr {...props}>{children}</tr>;
+export function TableRow({ children }: TableRowProps) {
+  return <tr>{children}</tr>;
 }
 
 // TableCell コンポーネント用の型定義（<td> に対応）

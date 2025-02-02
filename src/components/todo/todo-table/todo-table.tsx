@@ -36,11 +36,7 @@ type IndependentTodoRowProps = {
   isParent?: boolean;
   isGrouped?: boolean;
 };
-const IndependentTodoRow = ({
-  todo,
-  isGrouped,
-  isParent,
-}: IndependentTodoRowProps) => {
+const IndependentTodoRow = ({ todo, isGrouped }: IndependentTodoRowProps) => {
   const [value, setValue] = useState(todo.title);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,6 +92,11 @@ export function TodoTable({ headers, todoProject }: TodoTableProps) {
   return (
     <TableVirtuoso
       style={{ height: 400, width: 1000 }}
+      // trの代わりにReact.Fragmentを使うと正常に描画されない
+      // https://github.com/petyosi/react-virtuoso/issues/1012
+      // components={{
+      //   TableRow: React.Fragment,
+      // }}
       data={todoProject.todos}
       fixedHeaderContent={() => <TodoTableHeader headers={headers} />}
       itemContent={(_, todo) => <TodoTableRow todo={todo} />}
