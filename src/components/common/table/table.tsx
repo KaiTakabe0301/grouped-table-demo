@@ -44,5 +44,15 @@ type TableProps = PropsWithChildren<
   React.TableHTMLAttributes<HTMLTableElement>
 >;
 export function Table({ children, ...props }: TableProps) {
-  return <table {...props}>{children}</table>;
+  return (
+    <table
+      style={{
+        borderCollapse: "collapse",
+        borderSpacing: 0,
+      }}
+      {...props}
+    >
+      {children}
+    </table>
+  );
 }

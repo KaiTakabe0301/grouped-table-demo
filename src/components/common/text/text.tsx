@@ -1,8 +1,8 @@
 type TextProps = {
   value: string;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onClick: () => void;
-  onBlur: () => void;
+  onClick?: () => void;
+  onBlur?: () => void;
 };
 export function Text({ onBlur, onClick, value, onChange }: TextProps) {
   return (

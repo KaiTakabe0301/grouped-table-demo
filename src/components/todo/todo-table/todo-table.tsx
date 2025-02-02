@@ -1,114 +1,104 @@
 import React, { useState, memo } from "react";
-import { Todo } from "../../../models/todo";
-import {
-  TableRow,
-  TableCell,
-  TableHead,
-  TableHeader,
-  Table,
-  TableBody,
-} from "../../common/table/table";
+import { Todo, TodoDetail, TodoProject } from "../../../models/todo";
+import { TableRow, TableCell, TableHead } from "../../common/table/table";
 import { Text } from "../../common/text/text";
-import { useSWRConfig } from "swr";
+import { TableVirtuoso } from "react-virtuoso";
 
 type TodoTableHeaderProps = {
   headers: string[];
 };
 const TodoTableHeaderComponent = ({ headers }: TodoTableHeaderProps) => {
   return (
-    <TableHeader>
-      <TableRow>
-        {headers.map((header) => (
-          <TableHead key={header}>{header}</TableHead>
-        ))}
-      </TableRow>
-    </TableHeader>
+    <TableRow>
+      {headers.map((header) => (
+        <TableHead key={header}>{header}</TableHead>
+      ))}
+    </TableRow>
   );
 };
 export const TodoTableHeader = memo(TodoTableHeaderComponent);
 
 type TodoTableRowProps = {
-  todo: Todo;
+  todo: TodoDetail;
 };
-const TodoTableRowComponent = ({ todo }: TodoTableRowProps) => {
+const TodoTableRow = ({ todo }: TodoTableRowProps) => {
+  const { groupedTodos, todo: t } = todo;
+  if (t) {
+    return <IndependentTodoRow todo={t} />;
+  }
+  if (groupedTodos) {
+    return <GroupedTodoRow todos={groupedTodos} />;
+  }
+};
+
+type IndependentTodoRowProps = {
+  todo: Todo;
+  isParent?: boolean;
+  isGrouped?: boolean;
+};
+const IndependentTodoRow = ({
+  todo,
+  isGrouped,
+  isParent,
+}: IndependentTodoRowProps) => {
   const [value, setValue] = useState(todo.title);
-  const { mutate } = useSWRConfig();
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setValue(event.target.value);
   };
 
-  const handleBlur = async () => {
-    const response = await fetch(`http://localhost:3000/todos/${todo.id}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: value,
-      }),
-    });
-
-    if (response.ok) {
-      console.log("PATCH successful");
-      // 部分的な更新であれば、キャッシュを直接書き換えることも可能だが
-      // ここではシンプルに全体をrefetchする
-      mutate("http://localhost:3000/todos");
-    } else {
-      console.log("PATCH failed");
-    }
-  };
-
   return (
-    <TableRow>
-      <TableCell>
+    <>
+      <TableCell
+        style={{
+          width: 50,
+          ...(isGrouped && { borderLeft: "3px solid black" }),
+        }}
+      >
         <input type="checkbox" checked={todo.completed} />
       </TableCell>
       <TableCell>
-        <Text
-          value={value}
-          onChange={handleChange}
-          onClick={() => {}}
-          onBlur={handleBlur}
-        />
+        <Text value={value} onChange={handleChange} />
       </TableCell>
-      <TableCell>
+      <TableCell style={{ width: 150 }}>
         {todo.expiresAt ? new Date(todo.expiresAt).toLocaleDateString() : ""}
       </TableCell>
-      <TableCell>{new Date(todo.updatedAt).toLocaleTimeString()}</TableCell>
-    </TableRow>
+      <TableCell
+        style={{
+          width: 150,
+          ...(isGrouped && { borderRight: "3px solid black" }),
+        }}
+      >
+        {new Date(todo.updatedAt).toLocaleTimeString()}
+      </TableCell>
+    </>
   );
 };
 
-// todoが変わった時だけレンダリングするようメモ化
-export const TodoTableRow = memo(
-  TodoTableRowComponent,
-  (prevProps, nextProps) => {
-    // 比較関数: 変更がなければtrueを返してレンダリングしない
-    // ここではtodo.idで同一行を識別し、タイトルや日時などの変更有無で比較
-    return (
-      prevProps.todo.id === nextProps.todo.id &&
-      prevProps.todo.title === nextProps.todo.title &&
-      prevProps.todo.completed === nextProps.todo.completed &&
-      prevProps.todo.expiresAt === nextProps.todo.expiresAt &&
-      prevProps.todo.updatedAt === nextProps.todo.updatedAt
-    );
-  }
-);
+type GroupedTodoRowProps = {
+  todos: Todo[];
+};
+const GroupedTodoRow = ({ todos }: GroupedTodoRowProps) => {
+  return (
+    <>
+      {todos.map((todo) => (
+        <IndependentTodoRow key={todo.id} todo={todo} isGrouped />
+      ))}
+    </>
+  );
+};
 
 type TodoTableProps = {
   headers: string[];
-  todos: Todo[];
+  todoProject: TodoProject;
 };
-export function TodoTable({ headers, todos }: TodoTableProps) {
+export function TodoTable({ headers, todoProject }: TodoTableProps) {
   return (
-    <Table>
-      <TodoTableHeader headers={headers} />
-      <TableBody>
-        {todos.map((todo) => (
-          <TodoTableRow key={todo.id} todo={todo} />
-        ))}
-      </TableBody>
-    </Table>
+    <TableVirtuoso
+      style={{ height: 400, width: 1000 }}
+      data={todoProject.todos}
+      fixedHeaderContent={() => <TodoTableHeader headers={headers} />}
+      itemContent={(_, todo) => <TodoTableRow todo={todo} />}
+    />
   );
 }
