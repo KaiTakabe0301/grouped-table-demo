@@ -21,3 +21,11 @@ export type TodoDetail = {
 export type TodoProject = {
   todos: TodoDetail[];
 };
+
+export type GroupedTodoHeader = {
+  parentId: string;
+};
+
+export type TodoRow = {
+  todo: Todo | GroupedTodoHeader;
+};

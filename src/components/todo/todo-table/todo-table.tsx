@@ -1,5 +1,5 @@
 import React, { useState, memo } from "react";
-import { Todo, TodoDetail, TodoProject } from "../../../models/todo";
+import { Todo, TodoProject } from "../../../models/todo";
 import { TableRow, TableCell, TableHead } from "../../common/table/table";
 import { Text } from "../../common/text/text";
 import { TableVirtuoso } from "react-virtuoso";
